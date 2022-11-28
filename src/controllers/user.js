@@ -26,7 +26,7 @@ module.exports = class auth {
             const isValidEmail = await User.find({
                 email: req.body.email
             });
-            console.log(isValidEmail);
+            // console.log(isValidEmail);
             if (isValidEmail.length > 0) {
                 return res.status(400).send({
                     message: "Email already exits"

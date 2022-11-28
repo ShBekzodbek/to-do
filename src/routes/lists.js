@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { Add, GetAllList, addTask ,removeTask} = require('../controllers/list');
+const { Add, GetAllList, AddTask, RemoveTask } = require('../controllers/list');
 
 
 const router = express.Router();
@@ -13,14 +13,14 @@ router.get('/all', GetAllList);
 router.post('/add', Add);
 
 //one to list
-router.put('/:id', addTask);
+router.put('/:id', AddTask);
 
 //edit to list
 router.put('lists/edit/:id', (req, res) => {
     res.send('edit to list')
 });
 
-router.put('/remove/:id',removeTask)
+router.put('/remove/:id', RemoveTask)
 
 
 

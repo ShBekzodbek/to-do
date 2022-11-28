@@ -2,7 +2,6 @@
 const express = require('express');
 const morgan = require('morgan');
 const protect = require('./src/middlewares/auth');
-// const mongoLogger = require('mongoose-morgan');
 const app = express();
 require('dotenv').config();
 const conn = require('./src/config/connectDB');
@@ -29,13 +28,10 @@ app.use(morgan('dev'));
 //imported routers
 const userRoute = require('./src/routes/user');
 const listRoute = require('./src/routes/lists');
-const taskRoute = require('./src/routes/task');
 
 app.use('/user', userRoute);
 
 app.use('/lists', listRoute);
-
-app.use('/task', taskRoute);
 
 
 

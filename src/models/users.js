@@ -3,7 +3,6 @@ const { Schema, model } = require('mongoose');
 const validator = require('validator');
 
 
-//there will be user schema
 const userSchema = new Schema({
     name: {
         type: String,

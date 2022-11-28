@@ -56,10 +56,7 @@ module.exports = class auth {
 
             console.log('Error is in registreting endpoint' + error.message);
             return next(error);
-            // res.status(500).send({
-            //     message: "There may some technical errors during registering",
 
-            // })
         }
     };
     static async logIn(req, res, next) {
@@ -98,10 +95,7 @@ module.exports = class auth {
         } catch (error) {
             console.log('Error is in log in endpoint' + error.message);
             return next(error);
-            // res.status(500).send({
-            //     message: "There may some technical errors during loging in",
-            //     error: error.message
-            // })
+
         }
     };
     static async logOut(req, res, next) {
@@ -140,10 +134,6 @@ module.exports = class auth {
         } catch (error) {
             console.log('Error is in getting users endpoint' + error.message);
             return next(error);
-            // return res.status(500).send({
-            //     message: "There may some technical errors during getting users",
-            //     error: error.message
-            // })
         }
     };
     static async editUser(req, res, next) {
@@ -188,10 +178,7 @@ module.exports = class auth {
         } catch (error) {
             console.log('Error is in editing user endpoint' + error.message);
             return next(error);
-            // res.status(500).send({
-            //     message: "There may some technical errors during updating user",
-            //     error: error.message
-            // })
+
         }
     }
 

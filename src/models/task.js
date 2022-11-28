@@ -8,7 +8,7 @@ const taskSchema = new Schema({
         type: String,
         enum: ['Doing', 'Important', "Needed", "I'll do later", "On plan"],
         default: 'On plan',
-        
+
     },
     title: {
         type: String,

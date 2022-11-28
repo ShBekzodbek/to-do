@@ -4,9 +4,6 @@ const listValidator = require('../utils/validators/list-validator');
 
 const User = require('../models/users');
 
-const Task = require('../models/task');
-const mongoose = require('mongoose');
-const { indexOf } = require('lodash');
 
 
 module.exports = class list {
@@ -47,12 +44,8 @@ module.exports = class list {
     static async AddTask(req, res, next) {
         try {
             const id = req.params.id;
-            // const list = await List.findById(id);
-            // list.task.push(req.body);
-            // const result = await list.save();
-            // res.sendStatus(201).send(result);
+
             const task = req.body;
-            // task.id = new mongoose.Types.ObjectId;
 
             const list = await List.updateOne({ _id: id }, {
                 $push: {
@@ -72,10 +65,6 @@ module.exports = class list {
 
 
             const { id } = req.query;
-
-            // console.log('task id ' + id);
-
-            // console.log('list id ' + list_id.length);
 
             if (list_id.length < 24) {
                 return res.status(400).send("Invalid id");
@@ -102,8 +91,43 @@ module.exports = class list {
             return next(error);
         }
     };
-    static async UpdateTask(req, res, next){
- 
+    static async UpdateTask(req, res, next) {
+        try {
+            const list_id = req.params.id;
+            let list = req.body.list;
+            const { status, title, description } = req.body;
+            const { id } = req.query;
+            if (list_id.length < 24) {
+                return res.status(400).send("Invalid id");
+            }
+            const list_data = await List.findById(list_id);
+            console.log(list_data)
+            if (!list_data || list_data.length <= 0) {
+                return res.status(400).send(`Id: ${list_id} is invalid !`)
+            }
+            console.log(list_data.task)
+            let indexOfElement = list_data.task.findIndex(obj => {
+                return obj._id == id;
+            });
+            if (!list_data.task[indexOfElement] || list_data.task[indexOfElement].length == 0) {
+                return res.status(400).send(`task ${indexOfElement}  not found !`);
+            }
+
+            const result = await List.updateOne({ "task._id": id }, {
+                '$set': {
+                    'task.$.list': list,
+                    'task.$.status': status,
+                    'task.$.title': title,
+                    'task.$.description': description,
+
+                }
+            })
+
+            return res.send(` Task  was updated Successful \n Result:${result}`);
+        } catch (error) {
+            console.log('Error is on updating task list endpoint : \n' + error.message);
+            return next(error);
+        }
     }
     static async GetAllList(req, res, next) {
         try {

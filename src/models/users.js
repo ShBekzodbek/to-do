@@ -4,19 +4,27 @@ const validator = require('validator');
 
 
 const userSchema = new Schema({
-    name: {
+    fullname: {
         type: String,
-        required: true
+        required: [true, "fullname not provided"]
     },
     email: {
         type: String,
-        required: true,
-        unique: true,
-        validate(value){
-            if(!validator.isEmail(value)){
+        required: [true, "Email not provided"],
+        unique: [true, "Email already exists in database"],
+        trim: true,
+        validate(value) {
+            if (!validator.isEmail(value)) {
                 throw new Error('Email is invalid!')
             }
-        }
+        },
+
+    },
+    role: {
+        type: String,
+        enum: ["normal", "admin"],
+        default: "normal",
+        required: [true, "Please specify user role"]
     },
     password: {
         type: String,

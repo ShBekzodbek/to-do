@@ -1,6 +1,16 @@
 const jwt = require('jsonwebtoken');
 
 
+// const nodemailer = require('nodemailer');
+// const sendgridTransport = require('nodemailer-sendgrid-transport');
+
+// const transporter = nodemailer.createTransport(sendgridTransport({
+//     auth:{
+//         api_key:
+//     }
+// }))
+
+
 
 const userValidator = require('../utils/validators/user-validator');
 
@@ -14,6 +24,7 @@ module.exports = class auth {
     static async register(req, res, next) {
         try {
             //joi validator 
+
             const { error } = userValidator(req.body);
             // console.log(error);
 
@@ -38,16 +49,17 @@ module.exports = class auth {
             const result = await user.save();
 
             const token = jwt.sign(
-                { user_id: result._id, email: result.email },
+                { user_id: result._id },
                 process.env.SECRET_KEY);
 
             user.token = token;
             await user.save();
             res.status(201).send({
                 message: "User registered successfully",
-                username: result.name,
+                username: result.fullname,
                 email: result.email,
                 id: result._id,
+                role: result.role,
                 token
             });
 
@@ -63,7 +75,7 @@ module.exports = class auth {
         try {
             const { email, password } = req.body;
             //joi validator
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email: email });
             if (!user || user.length <= 0) {
                 return res.status(302).send({
                     message: "Email  or password invalid"
@@ -78,7 +90,6 @@ module.exports = class auth {
             const token = jwt.sign(
                 {
                     user_id: user._id,
-                    email
                 },
                 process.env.SECRET_KEY
             );
@@ -87,7 +98,7 @@ module.exports = class auth {
             await user.save();
 
             res.status(200).send({
-                username: user.name,
+                username: user.fullname,
                 email,
                 token
             })
@@ -101,22 +112,29 @@ module.exports = class auth {
     static async logOut(req, res, next) {
         try {
             const id = req.params.id;
-            console.log(id);
-            const isValidId = await User.findById(id);
-            // console.log(isValidId);
-            if (!isValidId || isValidId.length <= 0) {
+            // console.log(id);
+
+            if (req.user._id == id) {
+                const isValidId = await User.findById(id);
+                // console.log(isValidId);
+                if (!isValidId || isValidId.length <= 0) {
+                    return res.status(400).send({
+                        message: "Invalid Id",
+                    })
+                }
+                const result = await User.findByIdAndDelete(id).select(
+                    "_id name email"
+                );
+                // console.log(result);
+                return res.status(200).send({
+                    message: "Logged out",
+                    result
+                })
+            } else {
                 return res.status(400).send({
-                    message: "Invalid Id",
+                    message: "User not found "
                 })
             }
-            const result = await User.findByIdAndDelete(id).select(
-                "_id name email"
-            );
-            // console.log(result);
-            return res.status(200).send({
-                message: "Logged out",
-                result
-            })
         } catch (error) {
             console.log('Error is in log out endpoint' + error.message);
             return next(error);
@@ -125,12 +143,22 @@ module.exports = class auth {
     static async getUsers(req, res, next) {
         try {
             const users = await User.find()
-                .select('_id name token');
-            return res.status(200).send({
-                message: "Users are ",
-                users
+                .select('-__v');
 
-            })
+            if (req.user.role == "admin") {
+                return res.status(200).send({
+                    message: "Users are ",
+                    users
+
+                })
+            } else {
+                return res.status(200).send({
+
+                    user: req.user
+                })
+            }
+
+
         } catch (error) {
             console.log('Error is in getting users endpoint' + error.message);
             return next(error);
@@ -139,42 +167,49 @@ module.exports = class auth {
     static async editUser(req, res, next) {
         try {
             const id = req.params.id;
-            let response = {};
-            const { name, email, password } = req.body;
-            if (name) {
-                const result = await User.findByIdAndUpdate(id, {
-                    $set: {
-                        name: name
-                    }
+            if (req.user._id == id) {
+                let response = {};
+                const { name, email, password } = req.body;
+                if (name) {
+                    const result = await User.findByIdAndUpdate(id, {
+                        $set: {
+                            name: name
+                        }
+                    })
+                    await result.save();
+                    response.name = result.name;
+                }
+                if (email) {
+                    const result = await User.findByIdAndUpdate(id, {
+                        $set: {
+                            email: email
+                        }
+                    })
+                    await result.save();
+                    response.email = result.email;
+                }
+                if (password) {
+                    const encryptedPassword = await bcrypt.hash(password, 10);
+                    const result = await User.findByIdAndUpdate(id, {
+                        $set: {
+                            password: encryptedPassword
+                        }
+                    })
+                    await result.save();
+                    response.password = result.password;
+                }
+                return res.status(200).send({
+                    message: "Updated things :",
+                    name: response.name,
+                    email: response.email,
+                    password: response.password
                 })
-                await result.save();
-                response.name = result.name;
-            }
-            if (email) {
-                const result = await User.findByIdAndUpdate(id, {
-                    $set: {
-                        email: email
-                    }
+            } else {
+                return res.status(400).send({
+                    message: "Don't try to enter to another person's profile"
                 })
-                await result.save();
-                response.email = result.email;
             }
-            if (password) {
-                const encryptedPassword = await bcrypt.hash(password, 10);
-                const result = await User.findByIdAndUpdate(id, {
-                    $set: {
-                        password: encryptedPassword
-                    }
-                })
-                await result.save();
-                response.password = result.password;
-            }
-            return res.status(200).send({
-                message: "Updated things :",
-                name: response.name,
-                email: response.email,
-                password: response.password
-            })
+
         } catch (error) {
             console.log('Error is in editing user endpoint' + error.message);
             return next(error);

@@ -9,20 +9,21 @@ const User = require('../models/users');
 module.exports = class list {
 
     static async Add(req, res, next) {
+        
         try {
             const { error } = listValidator(req.body);
             if (error) {
                 res.status(500).send({
-                    message: "There may some technical error during adding list",
+                    message: "There may some technical error during adding list🔥",
                     error: error.message
                 })
             }
-            const { owner } = req.body;
+            const { id } = req.params;
             const isValidUser = await User.findById(owner);
             console.log(isValidUser);
             if (!isValidUser || isValidUser.length <= 0) {
                 return res.status(302).send({
-                    message: "User not found",
+                    message: "User not found🙂",
                 });
 
             };
@@ -30,20 +31,23 @@ module.exports = class list {
             const result = await list.save();
             isValidUser.list.push(result._id);
             await isValidUser.save();
-            res.status(201).send({
-                message: "List was added successfully",
+          return  res.status(201).send({
+                message: "List was added successfully😁",
                 list: result
             });
             console.log(result);
             console.log(addUserProfile);
         } catch (error) {
-            console.log('Error is on adding list endpoint' + error.message);
+            console.log('Error is on adding list endpoint😭' + error.message);
             return next(error);
         }
     };
     static async AddTask(req, res, next) {
         try {
             const id = req.params.id;
+            if (id.length < 24) {
+                return res.status(400).send("Invalid id🤨");
+            }
 
             const task = req.body;
 
@@ -53,9 +57,9 @@ module.exports = class list {
                 }
             });
 
-            return res.status(200).send(`added: ${list.modifiedCount} \n success:  ${list.acknowledged}`);
+            return res.status(200).send(`added: ${list.modifiedCount} \n success😁:  ${list.acknowledged}`);
         } catch (error) {
-            console.log('Error is on adding task list endpoint : \n' + error.message);
+            console.log('Error is on adding task list endpoint 🔥: \n' + error.message);
             return next(error);
         }
     };
@@ -66,15 +70,15 @@ module.exports = class list {
 
             const { id } = req.query;
 
-            if (list_id.length < 24) {
-                return res.status(400).send("Invalid id");
+            if (list_id.length < 24 || id.length < 24) {
+                return res.status(400).send("Invalid id🤨");
             }
 
             const list = await List.findById(list_id);
-            console.log(list)
+            // console.log(list+"😭")
 
             if (!list || list.length <= 0) {
-                return res.status(400).send(`Id: ${list_id} is invalid !`)
+                return res.status(400).send(`Id: ${list_id} is invalid🤨!`)
             }
             console.log(list.task)
             let indexOfElement = list.task.findIndex(obj => {
@@ -85,9 +89,9 @@ module.exports = class list {
             }
             await list.task[indexOfElement].remove({ _id: id });
             await list.save();
-            return res.send(` Task :${indexOfElement}  was removed Successful `);
+            return res.send(` Task :${indexOfElement}  was removed Successful😁`);
         } catch (error) {
-            console.log('Error is on removing task list endpoint : \n' + error.message);
+            console.log('Error is on removing task list endpoint 🔥: \n' + error.message);
             return next(error);
         }
     };
@@ -97,20 +101,20 @@ module.exports = class list {
             let list = req.body.list;
             const { status, title, description } = req.body;
             const { id } = req.query;
-            if (list_id.length < 24) {
-                return res.status(400).send("Invalid id");
+            if (list_id.length < 24 || id.length < 24) {
+                return res.status(400).send("Invalid id🤨");
             }
             const list_data = await List.findById(list_id);
             console.log(list_data)
             if (!list_data || list_data.length <= 0) {
-                return res.status(400).send(`Id: ${list_id} is invalid !`)
+                return res.status(400).send(`Id: ${list_id} is invalid 🤨!`)
             }
             console.log(list_data.task)
             let indexOfElement = list_data.task.findIndex(obj => {
                 return obj._id == id;
             });
             if (!list_data.task[indexOfElement] || list_data.task[indexOfElement].length == 0) {
-                return res.status(400).send(`task ${indexOfElement}  not found !`);
+                return res.status(400).send(`task ${indexOfElement}  not found 🤔!`);
             }
 
             const result = await List.updateOne({ "task._id": id }, {
@@ -123,19 +127,19 @@ module.exports = class list {
                 }
             })
 
-            return res.send(` Task  was updated Successful \n Result:${result}`);
+            return res.send(` Task  was updated Successful😁 \n Result:${result}`);
         } catch (error) {
-            console.log('Error is on updating task list endpoint : \n' + error.message);
+            console.log('Error is on updating task list endpoint🔥 : \n' + error.message);
             return next(error);
         }
     }
     static async GetAllList(req, res, next) {
         try {
             let lists = await List.find()
-                .select('-__v ')
+                .select('-__v -_id')
             if (!lists || lists.length <= 0) {
                 return res.status(302).send({
-                    message: "There is nothing yet ",
+                    message: "There is nothing yet🙂 ",
                     lists
                 })
             }
@@ -145,9 +149,52 @@ module.exports = class list {
                 lists
             })
         } catch (error) {
-            console.log('Error is on getting list endpoint : \n' + error.message);
+            console.log('Error is on getting list endpoint 🔥: \n' + error.message);
             return next(error);
         }
     };
+    static async EditListName(req, res, next) {
+        try {
+            const id = req.params.id;
+            if (id.length < 24) {
+                return res.status(400).send("Invalid id🤨");
+            }
+            const list = await List.findById(id);
+            if (list.length <= 0 || !list) {
+                return res.status(400).send("Invalid id🤨");
+            }
+
+            const result = await list.updateOne({
+                $set: {
+                    owner: req.body.owner,
+                    title: req.body.title,
+                }
+            });
+            console.log(result);
+            return res.status(200).send("List updated")
+
+
+        } catch (error) {
+            console.log('Error is on editing list endpoint🔥 : \n' + error.message);
+            return next(error);
+        }
+    };
+    static async DeleteListById(req, res, next) {
+        try {
+            const id = req.params.id;
+            if (id.length < 24 || !id) {
+                return res.status(204).send("Invalid id🤨");
+            }
+            const result = await List.findByIdAndDelete(id);
+            console.log('🙂');
+            return res.status(202).send(result+'😁');
+
+
+        } catch (error) {
+            console.log('Error is on deleting list endpoint🔥 : \n' + error.message);
+            return next(error);
+        }
+    };
+
 
 }
